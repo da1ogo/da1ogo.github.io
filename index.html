@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D карта в A-Frame</title>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe-extras.min.js"></script>
+    <style>
+        #timer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #score {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #restartButton {
+            position: absolute;
+            top: 100px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <a-scene>
+        <a-assets>
+            <a-asset-item id="mapModel" src="map.glb"></a-asset-item>
+            <img id="squareTexture" src="https://i.imgur.com/mYmmbrp.jpg">
+        </a-assets>
+        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6"></a-entity>
+
+        <!-- Контроллеры -->
+        <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
+        <a-entity id="right-controller" laser-controls="hand: right" raycaster="objects: .interactable" vive-controls="hand: right" oculus-touch-controls="hand: right" windows-motion-controls="hand: right" daydream-controls="hand: right" gearvr-controls="hand: right" magicleap-controls="hand: right"></a-entity>
+
+        <!-- Камера и управление движением -->
+        <a-entity id="cameraRig" position="0 1.6 0">
+            <a-entity id="playerCamera" camera look-controls wasd-controls></a-entity>
+            <a-cursor color="yellow" fuse="false" raycaster="objects: .interactable"></a-cursor>
+        </a-entity>
+
+        <a-light type="ambient" color="#FFF"></a-light>
+        <a-light type="directional" position="-1 1 1" intensity="0.5"></a-light>
+
+        <!-- Интерактивные объекты -->
+        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
+        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+    </a-scene>
+
+    <div id="timer">Таймер: 2:00</div>
+    <div id="score">Счет: 0/3</div>
+    <div id="restartButton" onclick="restartGame()">Перезапустить игру</div>
+
+    <script>
+        let timer;
+        let timeLeft = 120;
+        let timerStarted = false;
+        let score = 0;
+        const totalCubes = 3;
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').innerText = `Таймер: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft > 0) {
+                timeLeft--;
+            } else {
+                clearInterval(timer);
+                document.getElementById('timer').innerText = "Время вышло!";
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').innerText = `Счет: ${score}/${totalCubes}`;
+        }
+
+        function handleCubeClick(box) {
+            box.setAttribute('visible', 'false');
+            score++;
+            updateScore();
+            if (score >= totalCubes) {
+                clearInterval(timer);
+                document.getElementById('timer').innerText = "Вы выиграли!";
+            }
+        }
+
+        function initCubes() {
+            document.querySelectorAll('.interactable').forEach(box => {
+                box.addEventListener('click', () => handleCubeClick(box));
+            });
+        }
+
+        function initKeyPress() {
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'Space' && !timerStarted) {
+                    timerStarted = true;
+                    timer = setInterval(updateTimer, 1000);
+                }
+            });
+        }
+
+        function restartGame() {
+            score = 0;
+            timeLeft = 120;
+            timerStarted = false;
+            clearInterval(timer);
+            updateScore();
+            document.getElementById('timer').innerText = `Таймер: 2:00`;
+            document.querySelectorAll('.interactable').forEach(box => {
+                box.setAttribute('visible', 'true');
+            });
+            startTimer();
+        }
+
+        function startTimer() {
+            if (!timerStarted) {
+                timer = setInterval(updateTimer, 1000);
+                timerStarted = true;
+            }
+        }
+
+        window.onload = () => {
+            updateTimer();
+            updateScore();
+            initCubes();
+            initKeyPress();
+            startTimer();
+
+            // Обработка нажатий на контроллеры
+            const cameraRig = document.querySelector('#cameraRig');
+            const moveDistance = 0.1;
+
+            document.querySelector('#left-controller').addEventListener('triggerdown', () => {
+                cameraRig.object3D.position.z += moveDistance;
+            });
+
+            document.querySelector('#right-controller').addEventListener('triggerdown', () => {
+                cameraRig.object3D.position.z -= moveDistance;
+            });
+        };
+    </script>
+</body>
+</html>
