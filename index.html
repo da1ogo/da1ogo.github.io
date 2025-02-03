@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D карта в A-Frame</title>
+    <title>3D карта в A-Frame с физикой</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
     <script src="https://aframe.io/releases/1.4.2/aframe-extras.min.js"></script>
     <style>
         #timer {
@@ -40,12 +41,14 @@
     </style>
 </head>
 <body>
-    <a-scene>
+    <a-scene physics>
         <a-assets>
             <a-asset-item id="mapModel" src="map.glb"></a-asset-item>
             <img id="squareTexture" src="https://i.imgur.com/mYmmbrp.jpg">
         </a-assets>
-        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6"></a-entity>
+
+        <!-- Модель карты (статический объект) -->
+        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6" static-body></a-entity>
 
         <!-- Контроллеры -->
         <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
@@ -53,17 +56,21 @@
 
         <!-- Камера и управление движением -->
         <a-entity id="cameraRig" position="0 1.6 0">
-            <a-entity id="playerCamera" camera look-controls wasd-controls></a-entity>
+            <a-entity id="playerCamera" camera look-controls wasd-controls kinematic-body></a-entity>
             <a-cursor color="yellow" fuse="false" raycaster="objects: .interactable"></a-cursor>
         </a-entity>
 
+        <!-- Свет -->
         <a-light type="ambient" color="#FFF"></a-light>
         <a-light type="directional" position="-1 1 1" intensity="0.5"></a-light>
 
-        <!-- Интерактивные объекты -->
-        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+        <!-- Интерактивные объекты с физикой -->
+        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
+        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+
+        <!-- Пол под кубами для предотвращения их падения -->
+        <a-plane position="0 -1 0" rotation="-90 0 0" width="10" height="10" color="rgba(100, 100, 100, 0.5)" static-body></a-plane>
     </a-scene>
 
     <div id="timer">Таймер: 2:00</div>
@@ -127,6 +134,7 @@
             document.getElementById('timer').innerText = `Таймер: 2:00`;
             document.querySelectorAll('.interactable').forEach(box => {
                 box.setAttribute('visible', 'true');
+                box.components.body.add(); // Восстанавливаем физическое тело объекта
             });
             startTimer();
         }
