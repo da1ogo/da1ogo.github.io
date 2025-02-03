@@ -3,16 +3,39 @@
 <head>
     <title>3D карта в A-Frame</title>
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe-extras.min.js"></script>
     <style>
-        /* Стили для обычного режима */
-        #timer-html, #score-html, #restartButton-html {
+        #timer {
             position: absolute;
+            top: 10px;
+            left: 10px;
             font-size: 24px;
             color: white;
             background: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border-radius: 5px;
-            display: block; /* Показываем в обычном режиме */
+        }
+        #score {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #restartButton {
+            position: absolute;
+            top: 100px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
         }
     </style>
 </head>
@@ -22,39 +45,30 @@
             <a-asset-item id="mapModel" src="map.glb"></a-asset-item>
             <img id="squareTexture" src="https://i.imgur.com/mYmmbrp.jpg">
         </a-assets>
-
-       
         <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6"></a-entity>
 
-    
+        <!-- Контроллеры -->
         <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
         <a-entity id="right-controller" laser-controls="hand: right" raycaster="objects: .interactable" vive-controls="hand: right" oculus-touch-controls="hand: right" windows-motion-controls="hand: right" daydream-controls="hand: right" gearvr-controls="hand: right" magicleap-controls="hand: right"></a-entity>
 
-        
+        <!-- Камера и управление движением -->
         <a-entity id="cameraRig" position="0 1.6 0">
             <a-entity id="playerCamera" camera look-controls wasd-controls></a-entity>
             <a-cursor color="yellow" fuse="false" raycaster="objects: .interactable"></a-cursor>
         </a-entity>
 
-        
         <a-light type="ambient" color="#FFF"></a-light>
         <a-light type="directional" position="-1 1 1" intensity="0.5"></a-light>
 
-        
+        <!-- Интерактивные объекты -->
         <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
         <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
         <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
-
-        
-        <a-text id="timer-vr" value="Таймер: 2:00" align="center" width="4" color="white" position="-4 2 -3" rotation="0 -90 0"></a-text>
-        <a-text id="score-vr" value="Счет: 0/3" align="center" width="4" color="white" position="-4 1.5 -3" rotation="0 -90 0"></a-text>
-        <a-plane id="restartButton-vr" text="value: Перезапустить игру; color: white; align: center;" width="2" height="0.5" color="black" opacity="0.8" position="-4 1 -3" rotation="0 -90 0" cursor-listener></a-plane>
-
-        
-        <div id="timer-html">Таймер: 2:00</div>
-        <div id="score-html">Счет: 0/3</div>
-        <div id="restartButton-html" onclick="restartGame()">Перезапустить игру</div>
     </a-scene>
+
+    <div id="timer">Таймер: 2:00</div>
+    <div id="score">Счет: 0/3</div>
+    <div id="restartButton" onclick="restartGame()">Перезапустить игру</div>
 
     <script>
         let timer;
@@ -66,23 +80,17 @@
         function updateTimer() {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
-            const timerText = `Таймер: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            document.getElementById('timer-html').innerText = timerText;
-            document.getElementById('timer-vr').setAttribute('value', timerText);
-
+            document.getElementById('timer').innerText = `Таймер: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             if (timeLeft > 0) {
                 timeLeft--;
             } else {
                 clearInterval(timer);
-                document.getElementById('timer-html').innerText = "Время вышло!";
-                document.getElementById('timer-vr').setAttribute('value', 'Время вышло!');
+                document.getElementById('timer').innerText = "Время вышло!";
             }
         }
 
         function updateScore() {
-            const scoreText = `Счет: ${score}/${totalCubes}`;
-            document.getElementById('score-html').innerText = scoreText;
-            document.getElementById('score-vr').setAttribute('value', scoreText);
+            document.getElementById('score').innerText = `Счет: ${score}/${totalCubes}`;
         }
 
         function handleCubeClick(box) {
@@ -91,8 +99,7 @@
             updateScore();
             if (score >= totalCubes) {
                 clearInterval(timer);
-                document.getElementById('timer-html').innerText = "Вы выиграли!";
-                document.getElementById('timer-vr').setAttribute('value', 'Вы выиграли!');
+                document.getElementById('timer').innerText = "Вы выиграли!";
             }
         }
 
@@ -102,14 +109,22 @@
             });
         }
 
+        function initKeyPress() {
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'Space' && !timerStarted) {
+                    timerStarted = true;
+                    timer = setInterval(updateTimer, 1000);
+                }
+            });
+        }
+
         function restartGame() {
             score = 0;
             timeLeft = 120;
             timerStarted = false;
             clearInterval(timer);
             updateScore();
-            document.getElementById('timer-html').innerText = `Таймер: 2:00`;
-            document.getElementById('timer-vr').setAttribute('value', 'Таймер: 2:00');
+            document.getElementById('timer').innerText = `Таймер: 2:00`;
             document.querySelectorAll('.interactable').forEach(box => {
                 box.setAttribute('visible', 'true');
             });
@@ -127,7 +142,20 @@
             updateTimer();
             updateScore();
             initCubes();
+            initKeyPress();
             startTimer();
+
+            // Обработка нажатий на контроллеры
+            const cameraRig = document.querySelector('#cameraRig');
+            const moveDistance = 0.1;
+
+            document.querySelector('#left-controller').addEventListener('triggerdown', () => {
+                cameraRig.object3D.position.z += moveDistance;
+            });
+
+            document.querySelector('#right-controller').addEventListener('triggerdown', () => {
+                cameraRig.object3D.position.z -= moveDistance;
+            });
         };
     </script>
 </body>
