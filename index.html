@@ -37,7 +37,7 @@
         <a-entity id="right-controller" laser-controls="hand: right" raycaster="objects: .interactable" vive-controls="hand: right" oculus-touch-controls="hand: right" windows-motion-controls="hand: right" daydream-controls="hand: right" gearvr-controls="hand: right" magicleap-controls="hand: right"></a-entity>
 
         <!-- Камера и управление движением -->
-        <a-entity id="cameraRig" position="0 1.6 0" kinematic-body>
+        <a-entity id="cameraRig" position="0 1.6 0">
             <a-entity id="playerCamera" camera look-controls wasd-controls></a-entity>
             <a-cursor color="yellow" fuse="false" raycaster="objects: .interactable"></a-cursor>
         </a-entity>
