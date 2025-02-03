@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D карта в A-Frame с физикой</title>
+    <title>3D карта в A-Frame с физикой и частицами</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
-    <script src="https://aframe.io/releases/1.4.2/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-particle-system-component@v1.2.0/dist/aframe-particle-system-component.min.js"></script>
     <style>
         #timer {
             position: absolute;
@@ -64,10 +64,16 @@
         <a-light type="ambient" color="#FFF"></a-light>
         <a-light type="directional" position="-1 1 1" intensity="0.5"></a-light>
 
-        <!-- Интерактивные объекты с физикой -->
-        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+        <!-- Интерактивные объекты с физикой и частицами -->
+        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true">
+            <a-entity particle-system="preset: snow; color: red; particleCount: 50;" visible="false"></a-entity>
+        </a-box>
+        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true">
+            <a-entity particle-system="preset: snow; color: blue; particleCount: 50;" visible="false"></a-entity>
+        </a-box>
+        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" dynamic-body animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true">
+            <a-entity particle-system="preset: snow; color: green; particleCount: 50;" visible="false"></a-entity>
+        </a-box>
 
         <!-- Пол под кубами для предотвращения их падения -->
         <a-plane position="0 -1 0" rotation="-90 0 0" width="10" height="10" color="rgba(100, 100, 100, 0.5)" static-body></a-plane>
@@ -102,6 +108,14 @@
 
         function handleCubeClick(box) {
             box.setAttribute('visible', 'false');
+
+            // Активация системы частиц
+            const particleSystem = box.querySelector('a-entity');
+            particleSystem.setAttribute('visible', true);
+            setTimeout(() => {
+                particleSystem.setAttribute('visible', false); // Отключение видимости после завершения анимации
+            }, 2000); // Продолжительность анимации частиц
+
             score++;
             updateScore();
             if (score >= totalCubes) {
@@ -132,10 +146,17 @@
             clearInterval(timer);
             updateScore();
             document.getElementById('timer').innerText = `Таймер: 2:00`;
+
+            // Восстановление кубиков и скрытие систем частиц
             document.querySelectorAll('.interactable').forEach(box => {
                 box.setAttribute('visible', 'true');
+                const particleSystem = box.querySelector('a-entity');
+                if (particleSystem) {
+                    particleSystem.setAttribute('visible', false);
+                }
                 box.components.body.add(); // Восстанавливаем физическое тело объекта
             });
+
             startTimer();
         }
 
