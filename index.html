@@ -29,6 +29,9 @@
         <!-- Модель карты -->
         <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6" static-body></a-entity>
 
+        <!-- Прозрачная платформа под камерой -->
+        <a-plane id="cameraPlatform" position="0 0.1 0" rotation="-90 0 0" width="5" height="5" color="rgba(0, 0, 255, 0.2)" static-body></a-plane>
+
         <!-- Контроллеры -->
         <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
         <a-entity id="right-controller" laser-controls="hand: right" raycaster="objects: .interactable" vive-controls="hand: right" oculus-touch-controls="hand: right" windows-motion-controls="hand: right" daydream-controls="hand: right" gearvr-controls="hand: right" magicleap-controls="hand: right"></a-entity>
