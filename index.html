@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D карта в A-Frame</title>
+    <title>3D карта в A-Frame с физикой</title>
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://aframe.io/releases/1.6.0/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras@4.2.0/dist/aframe-extras.min.js"></script>
     <style>
         /* Стили для обычного режима */
         #timer-html, #score-html, #restartButton-html {
@@ -13,25 +14,27 @@
             background: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border-radius: 5px;
+            display: none; /* Скрыть в обычном режиме */
         }
     </style>
 </head>
 <body>
-    <a-scene>
+    <a-scene physics>
         <a-assets>
             <a-asset-item id="mapModel" src="map.glb"></a-asset-item>
             <img id="squareTexture" src="https://i.imgur.com/mYmmbrp.jpg">
+            <audio id="collectSound" src="1.mp3"></audio>
         </a-assets>
 
         <!-- Модель карты -->
-        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6"></a-entity>
+        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6" static-body></a-entity>
 
         <!-- Контроллеры -->
         <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
         <a-entity id="right-controller" laser-controls="hand: right" raycaster="objects: .interactable" vive-controls="hand: right" oculus-touch-controls="hand: right" windows-motion-controls="hand: right" daydream-controls="hand: right" gearvr-controls="hand: right" magicleap-controls="hand: right"></a-entity>
 
         <!-- Камера и управление движением -->
-        <a-entity id="cameraRig" position="0 1.6 0">
+        <a-entity id="cameraRig" position="0 1.6 0" kinematic-body>
             <a-entity id="playerCamera" camera look-controls wasd-controls></a-entity>
             <a-cursor color="yellow" fuse="false" raycaster="objects: .interactable"></a-cursor>
         </a-entity>
@@ -40,10 +43,10 @@
         <a-light type="ambient" color="#FFF"></a-light>
         <a-light type="directional" position="-1 1 1" intensity="0.5"></a-light>
 
-        <!-- Интерактивные объекты -->
-        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true"></a-box>
-        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true"></a-box>
+        <!-- Интерактивные объекты с физикой -->
+        <a-box position="-4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: -4 1.5 -5; dir: alternate; dur: 2000; loop: true" dynamic-body sound="on: bodyLoaded; src: #collectSound"></a-box>
+        <a-box position="0 1 -7" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 0 1.5 -7; dir: alternate; dur: 2000; loop: true" dynamic-body sound="on: bodyLoaded; src: #collectSound"></a-box>
+        <a-box position="4 1 -5" material="src: #squareTexture" class="interactable" scale="2 2 2" animation="property: position; to: 4 1.5 -5; dir: alternate; dur: 2000; loop: true" dynamic-body sound="on: bodyLoaded; src: #collectSound"></a-box>
 
         <!-- UI Elements для VR -->
         <a-plane id="timer-vr" text="value: Таймер: 2:00; align: center;" width="2" height="0.5" color="black" opacity="0.8" position="-4 2 -3" rotation="0 -90 0"></a-plane>
@@ -87,6 +90,7 @@
 
         function handleCubeClick(box) {
             box.setAttribute('visible', 'false');
+            box.components.body.remove(); // Удаляем физическое тело после сбора
             score++;
             updateScore();
             if (score >= totalCubes) {
@@ -98,7 +102,14 @@
 
         function initCubes() {
             document.querySelectorAll('.interactable').forEach(box => {
-                box.addEventListener('click', () => handleCubeClick(box));
+                box.addEventListener('bodyLoaded', () => {
+                    box.addEventListener('click', () => {
+                        handleCubeClick(box);
+                        const collectSound = document.getElementById('collectSound');
+                        collectSound.currentTime = 0; // Перезапускаем звук
+                        collectSound.play(); // Проигрываем звук при сборе
+                    });
+                });
             });
         }
 
@@ -112,6 +123,7 @@
             document.getElementById('timer-vr').setAttribute('text', 'value: Таймер: 2:00;');
             document.querySelectorAll('.interactable').forEach(box => {
                 box.setAttribute('visible', 'true');
+                box.components.body.add(); // Восстанавливаем физическое тело
             });
             startTimer();
         }
@@ -142,17 +154,14 @@
 
             // Обработчик события входа в VR
             document.querySelector('a-scene').addEventListener('enter-vr', () => {
-                // Скрываем HTML-элементы
                 document.getElementById('timer-html').style.display = 'none';
                 document.getElementById('score-html').style.display = 'none';
                 document.getElementById('restartButton-html').style.display = 'none';
 
-                // Показываем VR-элементы
                 document.getElementById('timer-vr').setAttribute('visible', true);
                 document.getElementById('score-vr').setAttribute('visible', true);
                 document.getElementById('restartButton-vr').setAttribute('visible', true);
 
-                // Добавляем обработчик клика для кнопки перезапуска в VR
                 document.getElementById('restartButton-vr').addEventListener('click', () => {
                     restartGame();
                 });
@@ -160,12 +169,10 @@
 
             // Обработчик выхода из VR
             document.querySelector('a-scene').addEventListener('exit-vr', () => {
-                // Показываем HTML-элементы
                 document.getElementById('timer-html').style.display = 'block';
                 document.getElementById('score-html').style.display = 'block';
                 document.getElementById('restartButton-html').style.display = 'block';
 
-                // Скрываем VR-элементы
                 document.getElementById('timer-vr').setAttribute('visible', false);
                 document.getElementById('score-vr').setAttribute('visible', false);
                 document.getElementById('restartButton-vr').setAttribute('visible', false);
