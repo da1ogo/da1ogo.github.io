@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>3D карта в A-Frame с физикой и частицами</title>
+    <title>3D карта в A-Frame с физикой</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-particle-system-component@v1.2.0/dist/aframe-particle-system-component.min.js"></script>
@@ -48,7 +48,7 @@
         </a-assets>
 
         <!-- Модель карты (статический объект) -->
-        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6" static-body></a-entity>
+        <a-entity gltf-model="#mapModel" position="1 1 10" scale="6 6 6"></a-entity>
 
         <!-- Контроллеры -->
         <a-entity id="left-controller" laser-controls="hand: left" raycaster="objects: .interactable" vive-controls="hand: left" oculus-touch-controls="hand: left" windows-motion-controls="hand: left" daydream-controls="hand: left" gearvr-controls="hand: left" magicleap-controls="hand: left"></a-entity>
